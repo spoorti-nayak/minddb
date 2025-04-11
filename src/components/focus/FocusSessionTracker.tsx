@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Clock, Play, SquareStop, ZapOff } from "lucide-react";
+import { AlertTriangle, Clock, Play, Square, ZapOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { startSession, endSession, getCurrentSession, DistractionEvent } from "@/utils/sessionTracker";
 import { useDistractionDetector, useIdleDetection } from "@/utils/distractionDetector";
@@ -83,11 +83,13 @@ export function FocusSessionTracker() {
     const duration = intervalToDuration({ start: 0, end: ms });
     const formatted = formatDuration(duration, {
       format: ['hours', 'minutes', 'seconds'],
-      delimiter: ':',
-      zero: true,
-      padding: true
+      delimiter: ':'
     });
-    return formatted || "00:00:00";
+    
+    // Add zero-padding manually since 'padding' isn't a valid option
+    const parts = (formatted || "").split(':');
+    const paddedParts = parts.map(part => part.padStart(2, '0'));
+    return paddedParts.join(':') || "00:00:00";
   };
   
   // Display distraction status
@@ -187,7 +189,7 @@ export function FocusSessionTracker() {
               variant="destructive" 
               className="w-full"
             >
-              <SquareStop className="mr-2 h-4 w-4" />
+              <Square className="mr-2 h-4 w-4" />
               End Session
             </Button>
           </div>
