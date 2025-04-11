@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,11 +29,9 @@ export function PomodoroTimer({
   const [focusTime, setFocusTime] = useState(initialMinutes);
   const [breakTime, setBreakTime] = useState(breakMinutes);
   
-  // Use ref to track the current timer mode's total seconds
   const totalSecondsRef = useRef(isBreak ? breakTime * 60 : focusTime * 60);
   const { toast } = useToast();
 
-  // Update total seconds when mode or settings change
   useEffect(() => {
     totalSecondsRef.current = isBreak ? breakTime * 60 : focusTime * 60;
   }, [isBreak, focusTime, breakTime]);
@@ -59,7 +56,6 @@ export function PomodoroTimer({
   const handleFocusTimeChange = (value: number[]) => {
     const newValue = value[0];
     setFocusTime(newValue);
-    // If we're not in break mode and the timer isn't active, update the displayed time
     if (!isBreak && !isActive) {
       setMinutes(newValue);
       setSeconds(0);
@@ -72,7 +68,6 @@ export function PomodoroTimer({
   const handleBreakTimeChange = (value: number[]) => {
     const newValue = value[0];
     setBreakTime(newValue);
-    // If we're in break mode and the timer isn't active, update the displayed time
     if (isBreak && !isActive) {
       setMinutes(newValue);
       setSeconds(0);
@@ -83,7 +78,6 @@ export function PomodoroTimer({
   };
 
   const applySettings = () => {
-    // If timer is not active, reset with new settings
     if (!isActive) {
       resetTimer(isBreak);
     }
@@ -97,7 +91,6 @@ export function PomodoroTimer({
         if (seconds === 0) {
           if (minutes === 0) {
             clearInterval(interval as NodeJS.Timeout);
-            // Timer completed
             if (isBreak) {
               toast({
                 title: "Break time is over!",
@@ -119,7 +112,6 @@ export function PomodoroTimer({
           setSeconds(seconds - 1);
         }
 
-        // Calculate progress
         const currentTotalSeconds = minutes * 60 + seconds;
         const newProgress = (currentTotalSeconds / totalSecondsRef.current) * 100;
         setProgress(newProgress);
@@ -187,7 +179,7 @@ export function PomodoroTimer({
       </CardHeader>
       <CardContent className="flex flex-col items-center space-y-4">
         <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-4 border-muted">
-          <div className="animate-pulse-gentle text-3xl font-bold">
+          <div className="animate-pulse-gentle timer-display">
             {formatTime(minutes, seconds)}
           </div>
           <div className="absolute -bottom-2 w-full px-4">

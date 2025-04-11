@@ -20,16 +20,13 @@ interface EyeCareReminderProps {
 type ReminderType = "eyeBreak" | "blink" | "screenBreak";
 
 export function EyeCareReminder({ className }: EyeCareReminderProps) {
-  // Load settings from localStorage or use defaults
   const settings = getEyeCareSettings();
 
-  // Timer state
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isActive, setIsActive] = useState(true);
   const [reminderType, setReminderType] = useState<ReminderType>("eyeBreak");
   const [progress, setProgress] = useState(100);
   
-  // Settings state
   const [eyeBreakInterval, setEyeBreakInterval] = useState(settings.eyeBreakInterval);
   const [eyeBreakDuration, setEyeBreakDuration] = useState(settings.eyeBreakDuration);
   const [blinkInterval, setBlinkInterval] = useState(settings.blinkInterval);
@@ -39,14 +36,12 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
   
   const { toast } = useToast();
 
-  // Request notification permission on component mount
   useEffect(() => {
     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
       Notification.requestPermission();
     }
   }, []);
 
-  // Get current interval and duration based on reminder type
   const getCurrentInterval = () => {
     switch (reminderType) {
       case "eyeBreak": return eyeBreakInterval;
@@ -59,7 +54,7 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
   const getCurrentDuration = () => {
     switch (reminderType) {
       case "eyeBreak": return eyeBreakDuration;
-      case "blink": return 5; // Blink for 5 seconds
+      case "blink": return 5;
       case "screenBreak": return screenBreakDuration;
       default: return eyeBreakDuration;
     }
@@ -95,20 +90,16 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
     });
   };
 
-  // Notify user with desktop notification and sound
   const notifyUser = (title: string, message: string) => {
-    // Toast notification
     toast({
       title: title,
       description: message,
     });
     
-    // Play sound
     if (playSounds) {
       playSound("eyecare");
     }
     
-    // Desktop notification
     if ("Notification" in window && Notification.permission === "granted") {
       new Notification(title, {
         body: message,
@@ -117,10 +108,9 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
     }
   };
 
-  // Main timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    const currentInterval = getCurrentInterval() * 60; // Convert to seconds
+    const currentInterval = getCurrentInterval() * 60;
     const currentDuration = getCurrentDuration();
     let isInBreak = false;
     let breakTimeRemaining = 0;
@@ -128,9 +118,7 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
     if (isActive) {
       interval = setInterval(() => {
         if (isInBreak) {
-          // During rest/break period
           if (breakTimeRemaining <= 0) {
-            // Break completed
             isInBreak = false;
             resetTimer();
             
@@ -141,9 +129,7 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
             setProgress(breakProgress);
           }
         } else {
-          // During work period
           if (timeElapsed >= currentInterval) {
-            // Work period ended, start break
             let breakTitle = "";
             let breakDescription = "";
             
@@ -151,17 +137,17 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
               case "eyeBreak":
                 breakTitle = "Time for an eye break!";
                 breakDescription = "Look at something 20 feet away for 20 seconds.";
-                setReminderType("blink"); // Switch to blink reminder next
+                setReminderType("blink");
                 break;
               case "blink":
                 breakTitle = "Time to blink!";
                 breakDescription = "Blink rapidly for a few seconds to refresh your eyes.";
-                setReminderType("screenBreak"); // Switch to screen break reminder next
+                setReminderType("screenBreak");
                 break;
               case "screenBreak":
                 breakTitle = "Time for a screen break!";
                 breakDescription = "Stand up, stretch, and look away from your screen.";
-                setReminderType("eyeBreak"); // Back to eye break
+                setReminderType("eyeBreak");
                 break;
             }
             
@@ -186,9 +172,8 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
     };
   }, [isActive, timeElapsed, reminderType, eyeBreakInterval, eyeBreakDuration, blinkInterval, screenBreakInterval, screenBreakDuration, playSounds, toast]);
 
-  // Get appropriate display for current timer type
   const getTimerDisplay = () => {
-    const currentInterval = getCurrentInterval() * 60; // In seconds
+    const currentInterval = getCurrentInterval() * 60;
     const timeRemaining = currentInterval - timeElapsed;
     const minutes = Math.floor(timeRemaining / 60);
     const seconds = timeRemaining % 60;
@@ -343,7 +328,7 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
           <div className="flex flex-col items-center justify-center text-center">
             {timerDisplay.icon}
             <span className="text-lg font-semibold mt-1">{timerDisplay.title}</span>
-            <span className="text-sm">
+            <span className="timer-display text-sm">
               {timerDisplay.time}
             </span>
           </div>
