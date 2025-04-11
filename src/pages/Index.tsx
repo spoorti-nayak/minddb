@@ -5,12 +5,14 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { ActivityChart } from "@/components/dashboard/ActivityChart";
 import { PomodoroTimer } from "@/components/timers/PomodoroTimer";
 import { EyeCareReminder } from "@/components/eyecare/EyeCareReminder";
+import { FocusSessionTracker } from "@/components/focus/FocusSessionTracker";
+import { SessionHistory } from "@/components/focus/SessionHistory";
 import { AppUsageList } from "@/components/dashboard/AppUsageList";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
-import { Clock, Eye, Activity, Zap, Settings, BarChart3 } from "lucide-react";
+import { Clock, Eye, Activity, Zap, Settings, BarChart3, BrainCircuit } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTimerSettings, saveTimerSettings } from "@/utils/userPreferences";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -48,14 +50,18 @@ const Index = () => {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="mb-6 grid w-full grid-cols-3">
+          <TabsList className="mb-6 grid w-full grid-cols-4">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span>Dashboard</span>
             </TabsTrigger>
             <TabsTrigger value="focus" className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              <span>Focus & Eye Care</span>
+              <BrainCircuit className="h-4 w-4" />
+              <span>Focus Tracking</span>
+            </TabsTrigger>
+            <TabsTrigger value="eyecare" className="flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              <span>Eye Care</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -107,11 +113,20 @@ const Index = () => {
 
           <TabsContent value="focus" className="animate-fade-in">
             <div className="grid gap-6 md:grid-cols-2">
-              <PomodoroTimer 
-                initialMinutes={timerSettings.focusTime} 
-                breakMinutes={timerSettings.breakTime} 
-                onSettingsChange={handleTimerSettingsChange}
-              />
+              <div className="space-y-6">
+                <FocusSessionTracker />
+                <PomodoroTimer 
+                  initialMinutes={timerSettings.focusTime} 
+                  breakMinutes={timerSettings.breakTime} 
+                  onSettingsChange={handleTimerSettingsChange}
+                />
+              </div>
+              <SessionHistory />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="eyecare" className="animate-fade-in">
+            <div className="grid gap-6 md:grid-cols-2">
               <EyeCareReminder />
             </div>
           </TabsContent>
