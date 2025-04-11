@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Eye, EyeOff, Clock, Bell, Activity, Settings } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
@@ -12,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getEyeCareSettings, saveEyeCareSettings } from "@/utils/userPreferences";
+import { playSound } from "@/utils/soundManager";
 
 interface EyeCareReminderProps {
   className?: string;
@@ -37,21 +37,13 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
   const [screenBreakDuration, setScreenBreakDuration] = useState(settings.screenBreakDuration);
   const [playSounds, setPlaySounds] = useState(settings.playSounds);
   
-  // Audio refs
-  const notificationSound = useRef<HTMLAudioElement | null>(null);
-  const calmingSound = useRef<HTMLAudioElement | null>(null);
-  
   const { toast } = useToast();
 
-  // Initialize audio elements
+  // Request notification permission on component mount
   useEffect(() => {
-    notificationSound.current = new Audio("/notification.mp3");
-    calmingSound.current = new Audio("/calming.mp3");
-    
-    return () => {
-      notificationSound.current = null;
-      calmingSound.current = null;
-    };
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
   }, []);
 
   // Get current interval and duration based on reminder type
@@ -103,6 +95,28 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
     });
   };
 
+  // Notify user with desktop notification and sound
+  const notifyUser = (title: string, message: string) => {
+    // Toast notification
+    toast({
+      title: title,
+      description: message,
+    });
+    
+    // Play sound
+    if (playSounds) {
+      playSound("eyecare");
+    }
+    
+    // Desktop notification
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title, {
+        body: message,
+        icon: "/favicon.ico"
+      });
+    }
+  };
+
   // Main timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -120,15 +134,7 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
             isInBreak = false;
             resetTimer();
             
-            if (calmingSound.current && calmingSound.current.played.length > 0) {
-              calmingSound.current.pause();
-              calmingSound.current.currentTime = 0;
-            }
-            
-            toast({
-              title: "Break completed!",
-              description: `Time to get back to work.`,
-            });
+            notifyUser("Break completed!", "Time to get back to work.");
           } else {
             breakTimeRemaining -= 1;
             const breakProgress = (breakTimeRemaining / currentDuration) * 100;
@@ -138,10 +144,6 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
           // During work period
           if (timeElapsed >= currentInterval) {
             // Work period ended, start break
-            if (playSounds && notificationSound.current) {
-              notificationSound.current.play();
-            }
-            
             let breakTitle = "";
             let breakDescription = "";
             
@@ -163,14 +165,7 @@ export function EyeCareReminder({ className }: EyeCareReminderProps) {
                 break;
             }
             
-            toast({
-              title: breakTitle,
-              description: breakDescription,
-            });
-            
-            if (playSounds && calmingSound.current && reminderType === "screenBreak") {
-              calmingSound.current.play();
-            }
+            notifyUser(breakTitle, breakDescription);
             
             isInBreak = true;
             breakTimeRemaining = currentDuration;

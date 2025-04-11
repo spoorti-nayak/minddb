@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,16 @@ import { useToast } from "@/hooks/use-toast";
 import { startSession, endSession, getCurrentSession, DistractionEvent } from "@/utils/sessionTracker";
 import { useDistractionDetector, useIdleDetection } from "@/utils/distractionDetector";
 import { formatDistanceToNow, formatDuration, intervalToDuration } from "date-fns";
+import { playSound, startBackgroundSound, stopBackgroundSound } from "@/utils/soundManager";
 
 export function FocusSessionTracker() {
   const [taskName, setTaskName] = useState("");
   const [activeSession, setActiveSession] = useState(getCurrentSession());
   const [elapsedTime, setElapsedTime] = useState(0);
   const { toast } = useToast();
+  
+  // Background sound reference
+  const backgroundSoundRef = useRef<HTMLAudioElement | null>(null);
   
   // Initialize distraction detection
   const { isDistracted, distractionReason, distractionStartTime, manuallyAddDistraction } = 
@@ -39,6 +43,20 @@ export function FocusSessionTracker() {
     setActiveSession(newSession);
     setTaskName("");
     
+    // Play sound and notification
+    playSound("notification");
+    
+    // Start background sound if enabled
+    backgroundSoundRef.current = startBackgroundSound();
+    
+    // Show desktop notification if browser supports it
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("Focus session started", {
+        body: `Working on: ${taskName}`,
+        icon: "/favicon.ico"
+      });
+    }
+    
     toast({
       title: "Focus session started",
       description: `Working on: ${taskName}`,
@@ -51,8 +69,23 @@ export function FocusSessionTracker() {
       const completedSession = endSession(activeSession.id);
       setActiveSession(null);
       
+      // Stop background sound
+      stopBackgroundSound(backgroundSoundRef.current);
+      backgroundSoundRef.current = null;
+      
+      // Play notification sound
+      playSound("notification");
+      
       const duration = completedSession?.duration || 0;
       const minutes = Math.floor(duration / 60000);
+      
+      // Show desktop notification
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Focus session completed", {
+          body: `You focused for ${minutes} minutes on ${completedSession?.taskName}`,
+          icon: "/favicon.ico"
+        });
+      }
       
       toast({
         title: "Focus session completed",
@@ -60,6 +93,13 @@ export function FocusSessionTracker() {
       });
     }
   };
+  
+  // Request notification permission on component mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+  }, []);
   
   // Update elapsed time
   useEffect(() => {
@@ -77,6 +117,22 @@ export function FocusSessionTracker() {
       if (timer) clearInterval(timer);
     };
   }, [activeSession]);
+  
+  // Handle distraction detection
+  useEffect(() => {
+    if (activeSession && isDistracted && !isIdle && distractionStartTime) {
+      // Play distraction sound
+      playSound("distraction");
+      
+      // Show desktop notification for distraction
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Distraction detected", {
+          body: `You seem to be distracted. Try to refocus on your task.`,
+          icon: "/favicon.ico"
+        });
+      }
+    }
+  }, [isDistracted, activeSession, isIdle, distractionStartTime]);
   
   // Format elapsed time
   const formatElapsedTime = (ms: number) => {
