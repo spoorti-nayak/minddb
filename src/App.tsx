@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,11 +16,10 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
-// This component determines where to redirect the user based on auth state
+// Redirect user based on auth status
 const RootRedirect = () => {
   const { user, isLoading } = useAuth();
-  
-  // Show loading spinner while auth state is being determined
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -29,8 +27,7 @@ const RootRedirect = () => {
       </div>
     );
   }
-  
-  // If user is logged in, redirect to dashboard, otherwise to welcome page
+
   return <Navigate to={user ? "/dashboard" : "/welcome"} replace />;
 };
 
@@ -42,16 +39,11 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Welcome/Landing Page */}
             <Route path="/welcome" element={<Welcome />} />
-            
-            {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            
-            {/* Protected Routes */}
             <Route 
               path="/dashboard" 
               element={
@@ -60,11 +52,7 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            
-            {/* Root path conditionally redirects based on auth state */}
             <Route path="/" element={<RootRedirect />} />
-            
-            {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

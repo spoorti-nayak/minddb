@@ -8,11 +8,16 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // 👇 This is the important addition
+    fs: {
+      strict: false,
+    },
+    // 👇 Ensure client-side routing fallback works
+    historyApiFallback: true,
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
