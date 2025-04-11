@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TopNav } from "@/components/layout/TopNav";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { ActivityChart } from "@/components/dashboard/ActivityChart";
@@ -9,9 +9,34 @@ import { AppUsageList } from "@/components/dashboard/AppUsageList";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
 import { Clock, Eye, Activity, Zap, Settings, BarChart3 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getTimerSettings, saveTimerSettings } from "@/utils/userPreferences";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [timerSettings, setTimerSettings] = useState({ focusTime: 25, breakTime: 5 });
+  const { toast } = useToast();
+
+  // Load saved timer settings on initial load
+  useEffect(() => {
+    const savedSettings = getTimerSettings();
+    setTimerSettings(savedSettings);
+  }, []);
+
+  const handleTimerSettingsChange = (focusMinutes: number, breakMinutes: number) => {
+    const newSettings = {
+      focusTime: focusMinutes,
+      breakTime: breakMinutes
+    };
+    
+    setTimerSettings(newSettings);
+    saveTimerSettings(newSettings);
+    
+    toast({
+      title: "Settings updated",
+      description: `Focus: ${focusMinutes} min, Break: ${breakMinutes} min`,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,7 +107,11 @@ const Index = () => {
 
           <TabsContent value="focus" className="animate-fade-in">
             <div className="grid gap-6 md:grid-cols-2">
-              <PomodoroTimer />
+              <PomodoroTimer 
+                initialMinutes={timerSettings.focusTime} 
+                breakMinutes={timerSettings.breakTime} 
+                onSettingsChange={handleTimerSettingsChange}
+              />
               <EyeCareReminder />
             </div>
           </TabsContent>
