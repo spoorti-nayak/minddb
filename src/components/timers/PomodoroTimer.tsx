@@ -8,7 +8,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { DialogClose } from "@radix-ui/react-dialog";
 
 interface TimerProps {
   initialMinutes?: number;
@@ -179,11 +178,9 @@ export function PomodoroTimer({
                   onValueChange={handleBreakTimeChange}
                 />
               </div>
-              <DialogClose asChild>
-                <Button onClick={applySettings} className="w-full">
-                  Apply
-                </Button>
-              </DialogClose>
+              <Button onClick={applySettings} className="w-full">
+                Apply
+              </Button>
             </div>
           </PopoverContent>
         </Popover>
